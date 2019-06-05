@@ -1,3 +1,9 @@
+//############# GLOBAL VARIABLES ############# 
+
+let correctCount = 0;
+let incorrectCount = 0;
+let activeDisplayIndex = 0;
+
 //############# OBJECTS (QUESTIONS) ############# 
 
 trivia = [
@@ -228,20 +234,24 @@ function askQuestion(item) {
     $("#main").append(`<div class="border border-info m-3 p-3" id=${item.name}></div>`)
     $(`${item.tag}`).append(`<strong>${item.question}</strong>`)
     $(`${item.tag}`).append(`<br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option1.status}>${item.option1.label + ' ' + item.option1.status}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option2.status}>${item.option2.label + ' ' + item.option2.status}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option3.status}>${item.option3.label + ' ' + item.option3.status}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option4.status}>${item.option4.label + ' ' + item.option4.status}</button>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option1.status}>${item.option1.label}</button>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option2.status}>${item.option2.label}</button>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option3.status}>${item.option3.label}</button>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option4.status}>${item.option4.label}</button>`)
 }
 
-for (i = 0; i < trivia.length; i++) {
-    askQuestion(trivia[i])
-};
-
-$(".triviaOption").on("click", function () {
-    alert($(this).val())
+$(document).on("click", ".triviaOption", function () {
+    let x = $(this).val();
+    console.log(x)
+    if (x === 'true') {
+        correctCount += 1
+    } else {
+        incorrectCount += 1
+    }
+    console.log('Correct: ' + correctCount)
+    console.log('Incorrect: ' + incorrectCount)
+    alert(x)
+    activeDisplayIndex +=1
 });
 
-// $(".triviaOption").on("click", function () {
-//     $(this).css({ color: 'red' })
-// });
+askQuestion(trivia[activeDisplayIndex])
