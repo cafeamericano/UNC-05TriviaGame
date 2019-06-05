@@ -3,6 +3,9 @@
 let correctCount = 0;
 let incorrectCount = 0;
 let activeDisplayIndex = 0;
+let defaultStartTime = 5;
+let timeLeft = defaultStartTime;
+var stopwatch = 0;
 
 //############# OBJECTS (QUESTIONS) ############# 
 
@@ -233,35 +236,88 @@ trivia = [
 //Render the question and available answers
 function askQuestion(item) {
     $("#main").append(`<div class="border border-info m-3 p-3" id=${item.name}></div>`)
-    $(`${item.tag}`).append(`<strong>${item.question}</strong>`)
-    $(`${item.tag}`).append(`<br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option1.status}>${item.option1.label}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option2.status}>${item.option2.label}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option3.status}>${item.option3.label}</button>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option4.status}>${item.option4.label}</button>`)
+    $(`${item.tag}`).append(`<strong>${item.question}</strong><br/><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option1.status}>${item.option1.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option2.status}>${item.option2.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option3.status}>${item.option3.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option4.status}>${item.option4.label}</button><br/>`)
+};
+
+function makeTimePass() {
+    $("#timeRemaining").text(`Time Left: ${timeLeft}`)
+    timeLeft -= 1
+    updateStopwatch()
+    if (timeLeft < 0) {
+        incorrectCount +=1
+        indicateResults();
+    }
 }
+
+function removeQuestionFromDOM() {
+    $("#main").empty()
+}
+
+function goToNextQuestion() {
+    removeQuestionFromDOM();
+    activeDisplayIndex += 1;
+    if (activeDisplayIndex < trivia.length) {
+        askQuestion(trivia[activeDisplayIndex])
+    }
+}
+
+function resetTimer() {
+    timeLeft = defaultStartTime;
+    clearInterval(stopwatch);
+    stopwatch = setInterval(makeTimePass, 1000);
+    updateStopwatch()
+}
+
+function updateStopwatch() {
+    $("#timeRemaining").text(`Time Left: ${timeLeft}`)
+}
+
+function indicateResults() {
+    // setTimeout(function(){ 
+    //     goToNextQuestion() 
+    // }, 3000);
+}
+
+function updateScoreboard() {
+    $("#correctCount").text(`Correct: ${correctCount}`)
+    $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+}
+
+//############# EVENT LISTENERS ############# 
 
 //Handle user's click on an answer
 $(document).on("click", ".triviaOption", function () {
     let x = $(this).val();
+
     if (x === 'true') {
         correctCount += 1
     } else {
         incorrectCount += 1
-    }
-    activeDisplayIndex +=1
-    $("#main").empty()
-    if (activeDisplayIndex < trivia.length) {
-        askQuestion(trivia[activeDisplayIndex])
-    }
+    };
 
-    $("#correctCount").text(`Correct: ${correctCount}`)
-    $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+    $("[value='false']").addClass("btn-outline-danger");
+    if (x === 'true') {
+        $("#main").append(`<div>That's correct.</div>`)
+    } else {
+        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
+    };
+
+    updateScoreboard();
+
+    // setTimeout(function(){ 
+    //     goToNextQuestion() 
+    // }, 3000);
 
 });
 
-//Run program
-//Render wins, losses
-$("body").prepend(`<div id='correctCount'>Correct: 0</div>`)
+//############# RUN PROGRAM ############# 
+
 $("body").prepend(`<div id='incorrectCount'>Incorrect: 0</div>`)
+$("body").prepend(`<div id='correctCount'>Correct: 0</div>`)
+//$("body").prepend(`<div id='timeRemaining'>Time Left: 0</div>`)
+//resetTimer()
 askQuestion(trivia[activeDisplayIndex])
