@@ -230,6 +230,7 @@ trivia = [
 
 //############# SHARED FUNCTIONS ############# 
 
+//Render the question and available answers
 function askQuestion(item) {
     $("#main").append(`<div class="border border-info m-3 p-3" id=${item.name}></div>`)
     $(`${item.tag}`).append(`<strong>${item.question}</strong>`)
@@ -240,18 +241,27 @@ function askQuestion(item) {
     $(`${item.tag}`).append(`<button class="triviaOption btn btn-info m-3" value=${item.option4.status}>${item.option4.label}</button>`)
 }
 
+//Handle user's click on an answer
 $(document).on("click", ".triviaOption", function () {
     let x = $(this).val();
-    console.log(x)
     if (x === 'true') {
         correctCount += 1
     } else {
         incorrectCount += 1
     }
-    console.log('Correct: ' + correctCount)
-    console.log('Incorrect: ' + incorrectCount)
-    alert(x)
     activeDisplayIndex +=1
+    $("#main").empty()
+    if (activeDisplayIndex < trivia.length) {
+        askQuestion(trivia[activeDisplayIndex])
+    }
+
+    $("#correctCount").text(`Correct: ${correctCount}`)
+    $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+
 });
 
+//Run program
+//Render wins, losses
+$("body").prepend(`<div id='correctCount'>Correct: 0</div>`)
+$("body").prepend(`<div id='incorrectCount'>Incorrect: 0</div>`)
 askQuestion(trivia[activeDisplayIndex])
