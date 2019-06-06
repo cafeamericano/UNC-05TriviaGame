@@ -5,9 +5,82 @@ let incorrectCount = 0;
 let activeDisplayIndex = 0;
 let defaultStartTime = 5;
 let timeLeft = defaultStartTime;
-var stopwatch = 0;
+var timeControl = 0;
+var timeoutToNext = 0;
 
 //############# OBJECTS (QUESTIONS) ############# 
+
+let turn = {
+    acceptingInput: true,
+    end: function () {
+        this.acceptingInput = false
+    },
+    begin: function () {
+        this.acceptingInput = true
+    }
+};
+
+let player = {
+    reward: function () {
+        correctCount += 1
+        $("#main").append(`<div>That's correct.</div>`)
+        scoreboard.update()
+        UI.presentResults();
+    },
+    punish: function () {
+        incorrectCount += 1
+        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
+        scoreboard.update()
+        UI.presentResults();
+    }
+}
+
+let stopwatch = {
+    stop: function () {
+        clearInterval(timeControl);
+    },
+    reset: function () {
+        timeLeft = defaultStartTime;
+        timeControl = setInterval(makeTimePass, 1000);
+        stopwatch.updateView()
+    },
+    updateView: function () {
+        $("#timeRemaining").text(`Time Left: ${timeLeft}`)
+    }
+}
+
+let scoreboard = {
+    update: function () {
+        $("#correctCount").text(`Correct: ${correctCount}`)
+        $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+    }
+}
+
+let UI = {
+    clearQuestion: function () {
+        $("#main").empty()
+    },
+    presentResults: function () {
+        $(".triviaOption").removeClass("btn-outline-info")
+        $("[value='true']").addClass("btn-success");
+        $("[value='false']").addClass("btn-outline-danger");
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3000);
+    },
+    interruptTimeout: function () {
+        clearTimeout(timeoutToNext)
+    },
+    goToNextQuestion: function () {
+        UI.interruptTimeout();
+        UI.clearQuestion();
+        activeDisplayIndex += 1;
+        if (activeDisplayIndex < trivia.length) {
+            stopwatch.reset()
+            askQuestion(trivia[activeDisplayIndex])
+            turn.begin()
+        }
+    }
+
+}
 
 trivia = [
     question1 = {
@@ -235,7 +308,7 @@ trivia = [
 
 //Render the question and available answers
 function askQuestion(item) {
-    $("#main").append(`<div class="border border-info m-3 p-3" id=${item.name}></div>`)
+    $("#main").append(`<div class="border border-info p-3" id=${item.name}></div>`)
     $(`${item.tag}`).append(`<strong>${item.question}</strong><br/><br/>`)
     $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option1.status}>${item.option1.label}</button><br/>`)
     $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option2.status}>${item.option2.label}</button><br/>`)
@@ -246,78 +319,44 @@ function askQuestion(item) {
 function makeTimePass() {
     $("#timeRemaining").text(`Time Left: ${timeLeft}`)
     timeLeft -= 1
-    updateStopwatch()
-    if (timeLeft < 0) {
-        incorrectCount +=1
-        indicateResults();
+    stopwatch.updateView()
+    if (timeLeft === 0) {
+        player.punish()
+        stopwatch.stop()
+        turn.end()
     }
-}
-
-function removeQuestionFromDOM() {
-    $("#main").empty()
-}
-
-function goToNextQuestion() {
-    removeQuestionFromDOM();
-    activeDisplayIndex += 1;
-    if (activeDisplayIndex < trivia.length) {
-        askQuestion(trivia[activeDisplayIndex])
-    }
-}
-
-function resetTimer() {
-    timeLeft = defaultStartTime;
-    clearInterval(stopwatch);
-    stopwatch = setInterval(makeTimePass, 1000);
-    updateStopwatch()
-}
-
-function updateStopwatch() {
-    $("#timeRemaining").text(`Time Left: ${timeLeft}`)
-}
-
-function indicateResults() {
-    // setTimeout(function(){ 
-    //     goToNextQuestion() 
-    // }, 3000);
 }
 
 function updateScoreboard() {
-    $("#correctCount").text(`Correct: ${correctCount}`)
-    $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+
 }
 
 //############# EVENT LISTENERS ############# 
 
 //Handle user's click on an answer
 $(document).on("click", ".triviaOption", function () {
-    let x = $(this).val();
+    if (turn.acceptingInput) {
 
-    if (x === 'true') {
-        correctCount += 1
-    } else {
-        incorrectCount += 1
-    };
+        UI.interruptTimeout();
+        let x = $(this).val();
 
-    $("[value='false']").addClass("btn-outline-danger");
-    if (x === 'true') {
-        $("#main").append(`<div>That's correct.</div>`)
-    } else {
-        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
-    };
+        UI.presentResults();
 
-    updateScoreboard();
+        if (x === 'true') {
+            player.reward()
+        } else {
+            player.punish()
+        };
 
-    // setTimeout(function(){ 
-    //     goToNextQuestion() 
-    // }, 3000);
-
+        updateScoreboard();
+        turn.end()
+        stopwatch.stop();
+    }
 });
 
 //############# RUN PROGRAM ############# 
-
-$("body").prepend(`<div id='incorrectCount'>Incorrect: 0</div>`)
-$("body").prepend(`<div id='correctCount'>Correct: 0</div>`)
-//$("body").prepend(`<div id='timeRemaining'>Time Left: 0</div>`)
-//resetTimer()
+$("#sidebar").append(`<div id='correctCount'>Correct: 0</div>`)
+$("#sidebar").append(`<div id='incorrectCount'>Incorrect: 0</div>`)
+$("#sidebar").append(`<div id='timeRemaining'>Time Left: 0</div>`)
+stopwatch.reset()
 askQuestion(trivia[activeDisplayIndex])
