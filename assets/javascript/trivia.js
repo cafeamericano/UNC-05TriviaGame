@@ -27,17 +27,25 @@ let player = {
         stopwatch.stop()
         turn.end()
         correctCount += 1
-        $("#main").append(`<div>That's correct.</div>`)
         scoreboard.update()
-        UI.presentResults();
+        UI.clearQuestionToDisplayReward()
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 5000);
     },
-    punish: function () {
+    implementPunishment: function() {
         stopwatch.stop()
         turn.end()
         incorrectCount += 1
-        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
         scoreboard.update()
-        UI.presentResults();
+    },
+    providedWrongAnswer: function () {
+        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
+        this.implementPunishment()
+        UI.presentCorrectAnswer();
+    },
+    outOfTime: function () {
+        $("#main").append(`<div>You are out of time!</div>`)
+        this.implementPunishment()
+        UI.presentCorrectAnswer();
     }
 };
 
@@ -52,7 +60,7 @@ let stopwatch = {
         stopwatch.updateView()
     },
     updateView: function () {
-        $("#timeRemaining").text(`Time Left: ${timeLeft}`)
+        $("#timeRemaining").text(`${timeLeft} seconds`)
     }
 };
 
@@ -61,26 +69,39 @@ let scoreboard = {
     update: function () {
         $("#correctCount").text(`Correct: ${correctCount}`)
         $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
+        $("#currentQuestion").text(`Question: ${activeDisplayIndex + 1} of ${trivia.length}`)
     }
 };
 
 //Control what the user sees
 let UI = {
-    initialRender: function() {
-        $("#sidebar").append(`<div id='correctCount'>Correct: 0</div>`)
-        $("#sidebar").append(`<div id='incorrectCount'>Incorrect: 0</div>`)
-        $("#sidebar").append(`<div id='timeRemaining'>Time Left: 0</div>`)
+    renderNewTestSession: function() {
+        $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
+        $("#watchface").append(`<li class="list-group-item" style="width: 100%" id='timeRemaining'></li>`)
+
+        $("#infoPanel").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Progress</li>`)
+        $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='correctCount'></li>`)
+        $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='incorrectCount'></li>`)
+        $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='currentQuestion'></li>`)
+        
+        scoreboard.update()
         stopwatch.reset()
         askQuestion(trivia[activeDisplayIndex])
     },
     clearQuestion: function () {
         $("#main").empty()
     },
-    presentResults: function () {
+    clearQuestionToDisplayReward: function() {
+        $('#main').children().fadeOut(300, function() {
+            $('#main').empty();
+            $("#main").append(`<div>That's correct.</div>`)
+        });
+    },
+    presentCorrectAnswer: function () {
         $(".triviaOption").removeClass("btn-outline-info")
         $("[value='true']").addClass("btn-success");
         $("[value='false']").addClass("btn-outline-danger");
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3000);
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 5000);
     },
     interruptTimeout: function () {
         clearTimeout(timeoutToNext)
@@ -91,6 +112,7 @@ let UI = {
         activeDisplayIndex += 1;
         if (activeDisplayIndex < trivia.length) {
             stopwatch.reset()
+            scoreboard.update()
             askQuestion(trivia[activeDisplayIndex])
             turn.begin()
         }
@@ -325,7 +347,7 @@ trivia = [
 
 //Render the question and available answers
 function askQuestion(item) {
-    $("#main").append(`<div class="border border-info p-3" id=${item.name}></div>`)
+    $("#main").append(`<div id=${item.name}></div>`)
     $(`${item.tag}`).append(`<strong>${item.question}</strong><br/><br/>`)
     $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option1.status}>${item.option1.label}</button><br/>`)
     $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option2.status}>${item.option2.label}</button><br/>`)
@@ -338,7 +360,7 @@ function makeTimePass() {
     timeLeft -= 1
     stopwatch.updateView()
     if (timeLeft === 0) {
-        player.punish()
+        player.outOfTime()
     }
 }
 
@@ -357,7 +379,7 @@ $(document).on("click", ".triviaOption", function () {
         if (selection === 'true') {
             player.reward()
         } else {
-            player.punish()
+            player.providedWrongAnswer()
         };
 
     }
@@ -365,5 +387,5 @@ $(document).on("click", ".triviaOption", function () {
 
 //############# RUN PROGRAM #################################################################   
 
-UI.initialRender();
+UI.renderNewTestSession();
 

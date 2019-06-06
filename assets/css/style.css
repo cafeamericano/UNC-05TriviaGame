@@ -1,7 +1,15 @@
-html, body, #everythingBelowHeader, .sidebar {
+/* html, body, #everythingBelowHeader, .sidebar {
   height: 100%
-}
+} */
 
 .triviaOption {
   width: 100%
+}
+
+.everythingBelowHeader {
+  width: 100%
+}
+
+button {
+  white-space: normal;
 }
