@@ -1,15 +1,16 @@
-//############# GLOBAL VARIABLES ############# 
+//############# GLOBAL VARIABLES #################################################################   
 
 let correctCount = 0;
 let incorrectCount = 0;
 let activeDisplayIndex = 0;
-let defaultStartTime = 5;
+let defaultStartTime = 10;
 let timeLeft = defaultStartTime;
 var timeControl = 0;
 var timeoutToNext = 0;
 
-//############# OBJECTS (QUESTIONS) ############# 
+//############# OBJECTS #################################################################   
 
+//Begin or end a turn
 let turn = {
     acceptingInput: true,
     end: function () {
@@ -20,21 +21,27 @@ let turn = {
     }
 };
 
+//Reward or punish based on selections
 let player = {
     reward: function () {
+        stopwatch.stop()
+        turn.end()
         correctCount += 1
         $("#main").append(`<div>That's correct.</div>`)
         scoreboard.update()
         UI.presentResults();
     },
     punish: function () {
+        stopwatch.stop()
+        turn.end()
         incorrectCount += 1
         $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
         scoreboard.update()
         UI.presentResults();
     }
-}
+};
 
+//Stopwatch
 let stopwatch = {
     stop: function () {
         clearInterval(timeControl);
@@ -47,16 +54,25 @@ let stopwatch = {
     updateView: function () {
         $("#timeRemaining").text(`Time Left: ${timeLeft}`)
     }
-}
+};
 
+//The scoreboard
 let scoreboard = {
     update: function () {
         $("#correctCount").text(`Correct: ${correctCount}`)
         $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
     }
-}
+};
 
+//Control what the user sees
 let UI = {
+    initialRender: function() {
+        $("#sidebar").append(`<div id='correctCount'>Correct: 0</div>`)
+        $("#sidebar").append(`<div id='incorrectCount'>Incorrect: 0</div>`)
+        $("#sidebar").append(`<div id='timeRemaining'>Time Left: 0</div>`)
+        stopwatch.reset()
+        askQuestion(trivia[activeDisplayIndex])
+    },
     clearQuestion: function () {
         $("#main").empty()
     },
@@ -78,10 +94,11 @@ let UI = {
             askQuestion(trivia[activeDisplayIndex])
             turn.begin()
         }
+        turn.acceptingInput = true;
     }
+};
 
-}
-
+//The questions and their answers
 trivia = [
     question1 = {
         name: "q1",
@@ -304,7 +321,7 @@ trivia = [
     }
 ];
 
-//############# SHARED FUNCTIONS ############# 
+//############# GLOBAL FUNCTIONS #################################################################   
 
 //Render the question and available answers
 function askQuestion(item) {
@@ -322,41 +339,31 @@ function makeTimePass() {
     stopwatch.updateView()
     if (timeLeft === 0) {
         player.punish()
-        stopwatch.stop()
-        turn.end()
     }
 }
 
-function updateScoreboard() {
+//############# EVENT LISTENERS #################################################################    
 
-}
-
-//############# EVENT LISTENERS ############# 
-
-//Handle user's click on an answer
+//Listen for click on a triviaOption element
 $(document).on("click", ".triviaOption", function () {
+
+    //As long as input is being accepted...
     if (turn.acceptingInput) {
 
-        UI.interruptTimeout();
-        let x = $(this).val();
-
-        UI.presentResults();
-
-        if (x === 'true') {
+        //Grab the value of the user's selection
+        let selection = $(this).val();
+        
+        //Reward or punish the player
+        if (selection === 'true') {
             player.reward()
         } else {
             player.punish()
         };
 
-        updateScoreboard();
-        turn.end()
-        stopwatch.stop();
     }
 });
 
-//############# RUN PROGRAM ############# 
-$("#sidebar").append(`<div id='correctCount'>Correct: 0</div>`)
-$("#sidebar").append(`<div id='incorrectCount'>Incorrect: 0</div>`)
-$("#sidebar").append(`<div id='timeRemaining'>Time Left: 0</div>`)
-stopwatch.reset()
-askQuestion(trivia[activeDisplayIndex])
+//############# RUN PROGRAM #################################################################   
+
+UI.initialRender();
+
