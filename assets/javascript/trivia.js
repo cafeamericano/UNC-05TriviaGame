@@ -444,6 +444,5 @@ $(document).on("click", "#restartButton", function () {
 
 //############# RUN PROGRAM #################################################################   
 
-activeDisplayIndex = 9;
 UI.renderNewTestSession();
 
