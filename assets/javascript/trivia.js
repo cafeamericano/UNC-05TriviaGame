@@ -2,20 +2,27 @@
 
 let correctCount = 0;
 let incorrectCount = 0;
-let activeDisplayIndex = 0;
+
 let defaultStartTime = 10;
 let timeLeft = defaultStartTime;
-var timeControl = 0;
-var timeoutToNext = 0;
+
+var stopwatchCountdown = 0;
+var timeoutUntilNextQuestion = 0;
+
+let shuffledQuestions = [];
+
+let activeDisplayIndex = 0;
 
 //############# OBJECTS #################################################################   
 
 //Begin or end a turn
 let turn = {
     acceptingInput: true,
+    //End turn
     end: function () {
         this.acceptingInput = false
     },
+    //Begin turn
     begin: function () {
         this.acceptingInput = true
     }
@@ -23,43 +30,53 @@ let turn = {
 
 //Reward or punish based on selections
 let player = {
+    //Reward the player
     reward: function () {
         stopwatch.stop()
         turn.end()
         correctCount += 1
         scoreboard.update()
         UI.clearQuestion_CorrectAnswer()
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
+        timeoutUntilNextQuestion = setTimeout(function () { UI.goToNextQuestion() }, 3500);
     },
+    //Define common punishment
     implementPunishment: function() {
         stopwatch.stop()
         turn.end()
         incorrectCount += 1
         scoreboard.update()
     },
+    //Common punishment + wrong-answer-specific punishment
     providedWrongAnswer: function () {
         this.implementPunishment()
         UI.clearQuestion_WrongAnswer();
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
+        timeoutUntilNextQuestion = setTimeout(function () { UI.goToNextQuestion() }, 3500);
 
     },
+    //Common punishment + time-out-specific punishment
     outOfTime: function () {
         this.implementPunishment()
         UI.clearQuestion_TimeUp();
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
+        timeoutUntilNextQuestion = setTimeout(function () { UI.goToNextQuestion() }, 3500);
     }
 };
 
 //Stopwatch
 let stopwatch = {
+
+    //Stop the clock
     stop: function () {
-        clearInterval(timeControl);
+        clearInterval(stopwatchCountdown);
     },
+
+    //Reset the clock
     reset: function () {
         timeLeft = defaultStartTime;
-        timeControl = setInterval(makeTimePass, 1000);
+        stopwatchCountdown = setInterval(makeTimePass, 1000);
         stopwatch.updateView()
     },
+
+    //Update the DOM
     updateView: function () {
         $("#timeRemaining").text(`${timeLeft} seconds`)
     }
@@ -67,14 +84,18 @@ let stopwatch = {
 
 //The scoreboard
 let scoreboard = {
+    //Update the scoreboard
     update: function () {
         $("#correctCount").text(`Correct: ${correctCount}`)
         $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
         $("#currentQuestion").text(`Question: ${activeDisplayIndex + 1} of ${trivia.length}`)
     },
+    //Show final results
     showFinalResults: function() {
         $("#watchAndInfo").remove()
         $("#main").css({width: '100%'})
+        $("#main").removeClass("col-9");
+        $("#main").addClass("mt-3");
         $("#main").append(`<h4 class="text-center text-info">Your final score is... </h4>`)
         $("#main").append(`<h1 class="text-center text-info" style="font-size: 150px">${correctCount/(trivia.length)*100}%</h1>`)
         $("#main").append(`<br/>`)
@@ -85,6 +106,17 @@ let scoreboard = {
 };
 
 let game = {
+    //Shuffle questions
+    shuffleQuestions: function() {
+        while (shuffledQuestions.length < 10) {
+            let randomNumber = Math.floor(Math.random() * 10);
+            if (shuffledQuestions.indexOf(randomNumber) === -1) {
+                shuffledQuestions.push(randomNumber)
+            }
+        }
+    },
+    
+    //Restart the game
     restart: function() {
         $('#everythingBelowHeader').empty()
         alert('Restarting...')
@@ -93,36 +125,47 @@ let game = {
         activeDisplayIndex = 0;
         defaultStartTime = 10;
         timeLeft = defaultStartTime;
-        timeControl = 0;
-        timeoutToNext = 0;
+        stopwatchCountdown = 0;
+        timeoutUntilNextQuestion = 0;
         UI.renderNewTestSession();
     }
 };
 
 //Control what the user sees
 let UI = {
-    renderNewTestSession: function() {
-        $("#everythingBelowHeader").append(`<div id='main' class="col-9 m-3 p-3"></div>`)
-        $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3 m-3 mt-4 pl-3"></div>`)
 
-        $("#watchAndInfo").append(`<div id="watchface" class="row mt-5 mb-3"></div>`)
-        $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
-        
+    //Start a new quiz
+    renderNewTestSession: function() {
+
+        //The watch and info section
+        $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3"></div>`)
+        //The section for the questions
+        $("#everythingBelowHeader").append(`<div id='main' class="col-9"></div>`)
+
+        //The watchface
+        $("#watchAndInfo").append(`<div id="watchface" class="row"></div>`)
         $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
         $("#watchface").append(`<li class="list-group-item" style="width: 100%" id='timeRemaining'></li>`)
 
+        //The info panel
+        $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
         $("#infoPanel").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Progress</li>`)
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='correctCount'></li>`)
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='incorrectCount'></li>`)
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='currentQuestion'></li>`)
         
+        game.shuffleQuestions()
         scoreboard.update()
         stopwatch.reset()
-        askQuestion(trivia[activeDisplayIndex])
+        askQuestion(trivia[shuffledQuestions[activeDisplayIndex]])
     },
+
+    //Define how to remove the question from the DOM
     clearQuestion: function () {
         $("#main").empty()
     },
+
+    //What happens when the correct answer is guessed
     clearQuestion_CorrectAnswer: function() {
         $('#main').children().fadeOut(300, function() {
             $('#main').empty();
@@ -130,23 +173,31 @@ let UI = {
             $("#main").append(`<div id="resultImage"><i class="fas fa-check-circle fa-10x"></i></div>`)
         });
     },
+
+    //What happens when th wrong answer is guessed
     clearQuestion_WrongAnswer: function () {
         $('#main').children().fadeOut(300, function() {
             $('#main').empty();
-            $("#main").append(`<div id="resultText" class="text-center">No! The correct answer is "${trivia[activeDisplayIndex].answer}".</div>`)
+            $("#main").append(`<div id="resultText" class="text-center">No! The correct answer is "${trivia[shuffledQuestions[activeDisplayIndex]].answer}".</div>`)
             $("#main").append(`<div id="resultImage"><i class="fas fa-times-circle fa-10x"></i></div>`)
         });        
     },
+
+    //What happens when time runs out
     clearQuestion_TimeUp: function () {
         $('#main').children().fadeOut(300, function() {
             $('#main').empty();
-            $("#main").append(`<div id="resultText" class="text-center">You ran out of time! The correct answer is "${trivia[activeDisplayIndex].answer}".</div>`)
+            $("#main").append(`<div id="resultText" class="text-center">You ran out of time! The correct answer is "${trivia[shuffledQuestions[activeDisplayIndex]].answer}".</div>`)
             $("#main").append(`<div id="resultImage"><i class="fas fa-stopwatch fa-10x"></i></div>`)
         });        
     },
+
+    //Clear the timer set for going to the next question
     interruptTimeout: function () {
-        clearTimeout(timeoutToNext)
+        clearTimeout(timeoutUntilNextQuestion)
     },
+
+    //Define how to go to the next question
     goToNextQuestion: function () {
         UI.interruptTimeout();
         UI.clearQuestion();
@@ -154,7 +205,7 @@ let UI = {
         if (activeDisplayIndex < trivia.length) {
             stopwatch.reset()
             scoreboard.update()
-            askQuestion(trivia[activeDisplayIndex])
+            askQuestion(trivia[shuffledQuestions[activeDisplayIndex]])
             turn.begin()
         } else {
             scoreboard.showFinalResults()
@@ -400,16 +451,16 @@ trivia = [
 
 //Render the question and available answers
 function askQuestion(item) {
-    $("#main").append(`<div id=${item.name}></div>`)
+    $("#main").append(`<div id=${item.name} class="container"></div>`)
     $(`${item.tag}`).append(`<strong>${item.question}</strong><br/><br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option1.status}>${item.option1.label}</button><br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option2.status}>${item.option2.label}</button><br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option3.status}>${item.option3.label}</button><br/>`)
-    $(`${item.tag}`).append(`<button class="triviaOption btn btn-outline-info mt-2 mb-2 card-body" value=${item.option4.status}>${item.option4.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption rounded btn-outline-info mt-2 mb-2 card-body" value=${item.option1.status}>${item.option1.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption rounded btn-outline-info mt-2 mb-2 card-body" value=${item.option2.status}>${item.option2.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption rounded btn-outline-info mt-2 mb-2 card-body" value=${item.option3.status}>${item.option3.label}</button><br/>`)
+    $(`${item.tag}`).append(`<button class="triviaOption rounded btn-outline-info mt-2 mb-2 card-body" value=${item.option4.status}>${item.option4.label}</button><br/>`)
 };
 
+//Define the passage of time and what to do when it runs out
 function makeTimePass() {
-    $("#timeRemaining").text(`Time Left: ${timeLeft}`)
     timeLeft -= 1
     stopwatch.updateView()
     if (timeLeft === 0) {
@@ -438,11 +489,18 @@ $(document).on("click", ".triviaOption", function () {
     }
 });
 
+//Listen for restart button
 $(document).on("click", "#restartButton", function () {
     game.restart()
 });
 
 //############# RUN PROGRAM #################################################################   
+
+function shuffleQuestions() {
+    
+};
+
+shuffleQuestions()
 
 UI.renderNewTestSession();
 

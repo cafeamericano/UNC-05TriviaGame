@@ -1,13 +1,9 @@
-/* html, body, #everythingBelowHeader, .sidebar {
+html, body {
   height: 100%
-} */
+} 
 
 .triviaOption {
   width: 100%
-}
-
-#everythingBelowHeader {
-  min-width: 960px
 }
 
 span {
@@ -30,4 +26,17 @@ button {
   display: flex; 
   justify-content: center; 
   align-items: center"
+}
+
+.row {
+  margin: 0px
+}
+
+#watchAndInfo {
+  padding: 0px
+}
+
+#main {
+  padding: 0px;
+  width: 90%
 }
