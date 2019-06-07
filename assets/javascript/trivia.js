@@ -103,9 +103,9 @@ let game = {
 let UI = {
     renderNewTestSession: function() {
         $("#everythingBelowHeader").append(`<div id='main' class="col-9 m-3 p-3"></div>`)
-        $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3 m-3 pl-3"></div>`)
+        $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3 m-3 mt-4 pl-3"></div>`)
 
-        $("#watchAndInfo").append(`<div id="watchface" class="row mt-4 mb-3"></div>`)
+        $("#watchAndInfo").append(`<div id="watchface" class="row mt-5 mb-3"></div>`)
         $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
         
         $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
