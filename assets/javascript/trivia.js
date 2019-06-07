@@ -40,7 +40,7 @@ let player = {
         timeoutUntilNextQuestion = setTimeout(function () { UI.goToNextQuestion() }, 3500);
     },
     //Define common punishment
-    implementPunishment: function() {
+    implementPunishment: function () {
         stopwatch.stop()
         turn.end()
         incorrectCount += 1
@@ -79,6 +79,7 @@ let stopwatch = {
     //Update the DOM
     updateView: function () {
         $("#timeRemaining").text(`${timeLeft} seconds`)
+        $("#progressBar").css({ width: ((timeLeft - defaultStartTime) / defaultStartTime) * -100 + '%' })
     }
 };
 
@@ -91,13 +92,13 @@ let scoreboard = {
         $("#currentQuestion").text(`Question: ${activeDisplayIndex + 1} of ${trivia.length}`)
     },
     //Show final results
-    showFinalResults: function() {
+    showFinalResults: function () {
         $("#watchAndInfo").remove()
-        $("#main").css({width: '100%'})
+        $("#main").css({ width: '100%' })
         $("#main").removeClass("col-9");
         $("#main").addClass("mt-3");
         $("#main").append(`<h4 class="text-center text-info">Your final score is... </h4>`)
-        $("#main").append(`<h1 class="text-center text-info" style="font-size: 150px">${correctCount/(trivia.length)*100}%</h1>`)
+        $("#main").append(`<h1 class="text-center text-info" style="font-size: 150px">${correctCount / (trivia.length) * 100}%</h1>`)
         $("#main").append(`<br/>`)
         $("#main").append(`<p class="text-center text-info">You answered ${correctCount} questions correctly.</p>`)
         $("#main").append(`<p class="text-center text-info">You missed ${incorrectCount} questions.</p>`)
@@ -107,17 +108,17 @@ let scoreboard = {
 
 let game = {
     //Shuffle questions
-    shuffleQuestions: function() {
-        while (shuffledQuestions.length < 10) {
-            let randomNumber = Math.floor(Math.random() * 10);
+    shuffleQuestions: function () {
+        while (shuffledQuestions.length < trivia.length) {
+            let randomNumber = Math.floor(Math.random() * trivia.length);
             if (shuffledQuestions.indexOf(randomNumber) === -1) {
                 shuffledQuestions.push(randomNumber)
             }
         }
     },
-    
+
     //Restart the game
-    restart: function() {
+    restart: function () {
         $('#everythingBelowHeader').empty()
         alert('Restarting...')
         correctCount = 0;
@@ -135,7 +136,7 @@ let game = {
 let UI = {
 
     //Start a new quiz
-    renderNewTestSession: function() {
+    renderNewTestSession: function () {
 
         //The watch and info section
         $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3"></div>`)
@@ -143,9 +144,10 @@ let UI = {
         $("#everythingBelowHeader").append(`<div id='main' class="col-9"></div>`)
 
         //The watchface
-        $("#watchAndInfo").append(`<div id="watchface" class="row"></div>`)
+        $("#watchAndInfo").append(`<div id="watchface" class="row mb-2"></div>`)
         $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
-        $("#watchface").append(`<li class="list-group-item" style="width: 100%" id='timeRemaining'></li>`)
+        $("#watchface").append(`<li class="list-group-item text-center" style="width: 100%" id='timeRemaining'></li>`)
+        $("#watchface").append(`<li class="list-group-item" style="width: 100%"><div class="progress"><div id='progressBar' class="progress-bar bg-danger" role="progressbar" style="width: 95%"></div></div></li>`)
 
         //The info panel
         $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
@@ -153,7 +155,7 @@ let UI = {
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='correctCount'></li>`)
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='incorrectCount'></li>`)
         $("#infoPanel").append(`<li class="list-group-item" style="width: 100%" id='currentQuestion'></li>`)
-        
+
         game.shuffleQuestions()
         scoreboard.update()
         stopwatch.reset()
@@ -166,8 +168,8 @@ let UI = {
     },
 
     //What happens when the correct answer is guessed
-    clearQuestion_CorrectAnswer: function() {
-        $('#main').children().fadeOut(300, function() {
+    clearQuestion_CorrectAnswer: function () {
+        $('#main').children().fadeOut(300, function () {
             $('#main').empty();
             $("#main").append(`<div id="resultText" class="text-center">That's correct!</div>`)
             $("#main").append(`<div id="resultImage"><i class="fas fa-check-circle fa-10x"></i></div>`)
@@ -176,20 +178,20 @@ let UI = {
 
     //What happens when th wrong answer is guessed
     clearQuestion_WrongAnswer: function () {
-        $('#main').children().fadeOut(300, function() {
+        $('#main').children().fadeOut(300, function () {
             $('#main').empty();
             $("#main").append(`<div id="resultText" class="text-center">No! The correct answer is "${trivia[shuffledQuestions[activeDisplayIndex]].answer}".</div>`)
             $("#main").append(`<div id="resultImage"><i class="fas fa-times-circle fa-10x"></i></div>`)
-        });        
+        });
     },
 
     //What happens when time runs out
     clearQuestion_TimeUp: function () {
-        $('#main').children().fadeOut(300, function() {
+        $('#main').children().fadeOut(300, function () {
             $('#main').empty();
             $("#main").append(`<div id="resultText" class="text-center">You ran out of time! The correct answer is "${trivia[shuffledQuestions[activeDisplayIndex]].answer}".</div>`)
             $("#main").append(`<div id="resultImage"><i class="fas fa-stopwatch fa-10x"></i></div>`)
-        });        
+        });
     },
 
     //Clear the timer set for going to the next question
@@ -478,7 +480,7 @@ $(document).on("click", ".triviaOption", function () {
 
         //Grab the value of the user's selection
         let selection = $(this).val();
-        
+
         //Reward or punish the player
         if (selection === 'true') {
             player.reward()
@@ -496,11 +498,6 @@ $(document).on("click", "#restartButton", function () {
 
 //############# RUN PROGRAM #################################################################   
 
-function shuffleQuestions() {
-    
-};
-
-shuffleQuestions()
-
 UI.renderNewTestSession();
+console.log(shuffledQuestions)
 
