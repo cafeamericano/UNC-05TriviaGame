@@ -6,10 +6,28 @@
   width: 100%
 }
 
-.everythingBelowHeader {
-  width: 100%
+#everythingBelowHeader {
+  min-width: 960px
+}
+
+span {
+  font-family: 'Orbitron', sans-serif;
+
 }
 
 button {
   white-space: normal;
+}
+
+#resultText {
+  padding-top: 30px;
+}
+
+#resultImage {
+  color: rgb(0,166,187);
+  height: 350px;
+  padding-top: 50px;
+  display: flex; 
+  justify-content: center; 
+  align-items: center"
 }

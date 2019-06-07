@@ -28,8 +28,8 @@ let player = {
         turn.end()
         correctCount += 1
         scoreboard.update()
-        UI.clearQuestionToDisplayReward()
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 5000);
+        UI.clearQuestion_CorrectAnswer()
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
     },
     implementPunishment: function() {
         stopwatch.stop()
@@ -38,14 +38,15 @@ let player = {
         scoreboard.update()
     },
     providedWrongAnswer: function () {
-        $("#main").append(`<div>Sorry. Your answer is incorrect.</div>`)
         this.implementPunishment()
-        UI.presentCorrectAnswer();
+        UI.clearQuestion_WrongAnswer();
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
+
     },
     outOfTime: function () {
-        $("#main").append(`<div>You are out of time!</div>`)
         this.implementPunishment()
-        UI.presentCorrectAnswer();
+        UI.clearQuestion_TimeUp();
+        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 3500);
     }
 };
 
@@ -70,12 +71,43 @@ let scoreboard = {
         $("#correctCount").text(`Correct: ${correctCount}`)
         $("#incorrectCount").text(`Incorrect: ${incorrectCount}`)
         $("#currentQuestion").text(`Question: ${activeDisplayIndex + 1} of ${trivia.length}`)
+    },
+    showFinalResults: function() {
+        $("#watchAndInfo").remove()
+        $("#main").css({width: '100%'})
+        $("#main").append(`<h4 class="text-center text-info">Your final score is... </h4>`)
+        $("#main").append(`<h1 class="text-center text-info" style="font-size: 150px">${correctCount/(trivia.length)*100}%</h1>`)
+        $("#main").append(`<br/>`)
+        $("#main").append(`<p class="text-center text-info">You answered ${correctCount} questions correctly.</p>`)
+        $("#main").append(`<p class="text-center text-info">You missed ${incorrectCount} questions.</p>`)
+        $("#main").append(`<div class='text-center'><button id="restartButton" class="btn btn-outline-info">Restart</button></div>`)
+    }
+};
+
+let game = {
+    restart: function() {
+        $('#everythingBelowHeader').empty()
+        alert('Restarting...')
+        correctCount = 0;
+        incorrectCount = 0;
+        activeDisplayIndex = 0;
+        defaultStartTime = 10;
+        timeLeft = defaultStartTime;
+        timeControl = 0;
+        timeoutToNext = 0;
+        UI.renderNewTestSession();
     }
 };
 
 //Control what the user sees
 let UI = {
     renderNewTestSession: function() {
+        $("#everythingBelowHeader").append(`<div id='main' class="col-9 m-3 p-3"></div>`)
+        $("#everythingBelowHeader").append(`<div id='watchAndInfo' class="col-3 m-3 pl-3"></div>`)
+
+        $("#watchAndInfo").append(`<div id="watchface" class="row mt-4 mb-3"></div>`)
+        $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
+        
         $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
         $("#watchface").append(`<li class="list-group-item" style="width: 100%" id='timeRemaining'></li>`)
 
@@ -91,17 +123,26 @@ let UI = {
     clearQuestion: function () {
         $("#main").empty()
     },
-    clearQuestionToDisplayReward: function() {
+    clearQuestion_CorrectAnswer: function() {
         $('#main').children().fadeOut(300, function() {
             $('#main').empty();
-            $("#main").append(`<div>That's correct.</div>`)
+            $("#main").append(`<div id="resultText" class="text-center">That's correct!</div>`)
+            $("#main").append(`<div id="resultImage"><i class="fas fa-check-circle fa-10x"></i></div>`)
         });
     },
-    presentCorrectAnswer: function () {
-        $(".triviaOption").removeClass("btn-outline-info")
-        $("[value='true']").addClass("btn-success");
-        $("[value='false']").addClass("btn-outline-danger");
-        timeoutToNext = setTimeout(function () { UI.goToNextQuestion() }, 5000);
+    clearQuestion_WrongAnswer: function () {
+        $('#main').children().fadeOut(300, function() {
+            $('#main').empty();
+            $("#main").append(`<div id="resultText" class="text-center">No! The correct answer is "${trivia[activeDisplayIndex].answer}".</div>`)
+            $("#main").append(`<div id="resultImage"><i class="fas fa-times-circle fa-10x"></i></div>`)
+        });        
+    },
+    clearQuestion_TimeUp: function () {
+        $('#main').children().fadeOut(300, function() {
+            $('#main').empty();
+            $("#main").append(`<div id="resultText" class="text-center">You ran out of time! The correct answer is "${trivia[activeDisplayIndex].answer}".</div>`)
+            $("#main").append(`<div id="resultImage"><i class="fas fa-stopwatch fa-10x"></i></div>`)
+        });        
     },
     interruptTimeout: function () {
         clearTimeout(timeoutToNext)
@@ -115,6 +156,8 @@ let UI = {
             scoreboard.update()
             askQuestion(trivia[activeDisplayIndex])
             turn.begin()
+        } else {
+            scoreboard.showFinalResults()
         }
         turn.acceptingInput = true;
     }
@@ -126,6 +169,7 @@ trivia = [
         name: "q1",
         tag: "#q1",
         question: "Which term measures the degree to which a lens is open?",
+        answer: "Aperture",
         option1: {
             label: "Bokeh",
             status: false
@@ -148,6 +192,7 @@ trivia = [
         name: "q2",
         tag: "#q2",
         question: "Which term references the background blur in a photo?",
+        answer: "Bokeh",
         option1: {
             label: "Portrait",
             status: false
@@ -170,6 +215,7 @@ trivia = [
         name: "q3",
         tag: "#q3",
         question: "The speed at which a camera takes a photo is…",
+        answer: "Shutter Speed",
         option1: {
             label: "HDR",
             status: false
@@ -192,6 +238,7 @@ trivia = [
         name: "q4",
         tag: "#q4",
         question: "A HDR (High Dynamic Range) photo is a photo…",
+        answer: "Created by combing multiple photos with varying exposures together",
         option1: {
             label: "Whose subject is affected by a wide range of lighting.",
             status: false
@@ -214,6 +261,7 @@ trivia = [
         name: "q5",
         tag: "#q5",
         question: "In photography, a RAW photo can be best described as…",
+        answer: "A photo saved in the camera’s native file format",
         option1: {
             label: "A photo that has not been edited.",
             status: false
@@ -236,6 +284,7 @@ trivia = [
         name: "q6",
         tag: "#q6",
         question: "ISO is a measurement of…",
+        answer: "The degree to which a camera is sensitive to light",
         option1: {
             label: "The amount of grain in a photo.",
             status: false
@@ -257,6 +306,8 @@ trivia = [
     question7 = {
         name: "q7",
         tag: "#q7",
+        question: "Changing the ISO setting on a camera will impact…",
+        answer: "All of the above",
         option1: {
             label: "How grainy a photo appears.",
             status: false
@@ -272,14 +323,14 @@ trivia = [
         option4: {
             label: "All of the above.",
             status: true
-        },
-        question: "Changing the ISO setting on a camera will impact…",
+        }
     },
 
     question8 = {
         name: "q8",
         tag: "#q8",
         question: "Which of the following describes the grain that appears in a photo?",
+        answer: "Noise",
         option1: {
             label: "Noise",
             status: true,
@@ -302,6 +353,7 @@ trivia = [
         name: "q9",
         tag: "#q9",
         question: "Between what two colors can white balance be adjusted?",
+        answer: "Blue and yellow",
         option1: {
             label: "Red and green",
             status: false
@@ -324,6 +376,7 @@ trivia = [
         name: "q10",
         tag: "#q10",
         question: "Which term best describes the perceived distance between a subject and the background and a photo?",
+        answer: "Depth of field",
         option1: {
             label: "Depth of field",
             status: true
@@ -385,7 +438,12 @@ $(document).on("click", ".triviaOption", function () {
     }
 });
 
+$(document).on("click", "#restartButton", function () {
+    game.restart()
+});
+
 //############# RUN PROGRAM #################################################################   
 
+activeDisplayIndex = 9;
 UI.renderNewTestSession();
 
