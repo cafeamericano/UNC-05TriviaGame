@@ -3,7 +3,7 @@
 let correctCount = 0;
 let incorrectCount = 0;
 
-let defaultStartTime = 10;
+let defaultStartTime = 15;
 let timeLeft = defaultStartTime;
 
 var stopwatchCountdown = 0;
@@ -124,7 +124,6 @@ let game = {
         correctCount = 0;
         incorrectCount = 0;
         activeDisplayIndex = 0;
-        defaultStartTime = 10;
         timeLeft = defaultStartTime;
         stopwatchCountdown = 0;
         timeoutUntilNextQuestion = 0;
@@ -147,7 +146,7 @@ let UI = {
         $("#watchAndInfo").append(`<div id="watchface" class="row mb-2"></div>`)
         $("#watchface").append(`<li class="list-group-item bg-info text-light font-weight-bold" style="width: 100%">Time Remaining</li>`)
         $("#watchface").append(`<li class="list-group-item text-center" style="width: 100%" id='timeRemaining'></li>`)
-        $("#watchface").append(`<li class="list-group-item" style="width: 100%"><div class="progress"><div id='progressBar' class="progress-bar bg-danger" role="progressbar" style="width: 95%"></div></div></li>`)
+        $("#watchface").append(`<li class="list-group-item" style="width: 100%"><div class="progress"><div id='progressBar' class="progress-bar progress-bar-striped progress-bar-animated bg-danger" role="progressbar" style="width: 95%"></div></div></li>`)
 
         //The info panel
         $("#watchAndInfo").append(`<div id="infoPanel" class="row"></div>`)
